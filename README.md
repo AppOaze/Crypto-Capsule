@@ -7,3 +7,4 @@ npm init vite@latest
 
 Don't have to touch any css code
 npm install -D tailwindcss postcss autoprefixer
+
