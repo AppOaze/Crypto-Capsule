@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import {ethers} from "ethers";
+import React, { useEffect, useState } from "react";
+import { ethers } from "ethers";
 
-import {contractABI, contractAddress} from "../utils/constants";
+import { contractABI, contractAddress } from "../utils/constants";
 
 export const TransactionContext = React.createContext();
 
@@ -16,16 +16,16 @@ const createEthereumContract = () => {
 };
 
 export const TransactionProvider = ({ children }) => {
+    const [formData, setformData] = useState({ addressTo: "", amount: "", keyword: "", message: "" });
     const [currentAccount, setCurrentAccount] = useState("");
-    const [formData, setFormData] = useState({addressTo:'', amount:'',keyword:'', message:''});
-
     const [isLoading, setIsLoading] = useState(false);
     const [transactionCount, setTransactionCount] = useState(localStorage.getItem("transactionCount"));
     const [transactions, setTransactions] = useState([]);
 
     const handleChange = (e, name) => {
-        setFormData((prevState) => ({ ...prevState, [name]: e.target.value }));
-    }
+        setformData((prevState) => ({ ...prevState, [name]: e.target.value }));
+    };
+
     const getAllTransactions = async () => {
         try {
             if (ethereum) {
@@ -42,8 +42,6 @@ export const TransactionProvider = ({ children }) => {
                     amount: parseInt(transaction.amount._hex) / (10 ** 18)
                 }));
 
-                console.log(structuredTransactions);
-
                 setTransactions(structuredTransactions);
             } else {
                 console.log("Ethereum is not present");
@@ -53,7 +51,7 @@ export const TransactionProvider = ({ children }) => {
         }
     };
 
-    const checkIfWalletIsConnected = async () => {
+    const checkIfWalletIsConnect = async () => {
         try {
             if (!ethereum) return alert("Please install MetaMask.");
 
@@ -69,7 +67,22 @@ export const TransactionProvider = ({ children }) => {
         } catch (error) {
             console.log(error);
         }
-    }
+    };
+
+    const checkIfTransactionsExists = async () => {
+        try {
+            if (ethereum) {
+                const transactionsContract = createEthereumContract();
+                const currentTransactionCount = await transactionsContract.getTransactionCount();
+
+                window.localStorage.setItem("transactionCount", currentTransactionCount);
+            }
+        } catch (error) {
+            console.log(error);
+
+            throw new Error("No ethereum object");
+        }
+    };
 
     const connectWallet = async () => {
         try {
@@ -78,12 +91,13 @@ export const TransactionProvider = ({ children }) => {
             const accounts = await ethereum.request({ method: "eth_requestAccounts", });
 
             setCurrentAccount(accounts[0]);
+            window.location.reload();
         } catch (error) {
             console.log(error);
 
             throw new Error("No ethereum object");
         }
-    }
+    };
 
     const sendTransaction = async () => {
         try {
@@ -113,6 +127,7 @@ export const TransactionProvider = ({ children }) => {
                 const transactionsCount = await transactionsContract.getTransactionCount();
 
                 setTransactionCount(transactionsCount.toNumber());
+                window.location.reload();
             } else {
                 console.log("No ethereum object");
             }
@@ -121,17 +136,19 @@ export const TransactionProvider = ({ children }) => {
 
             throw new Error("No ethereum object");
         }
-    }
+    };
 
     useEffect(() => {
-        checkIfWalletIsConnected();
-    }, []);
+        checkIfWalletIsConnect();
+        checkIfTransactionsExists();
+    }, [transactionCount]);
 
     return (
         <TransactionContext.Provider
             value={{
                 transactionCount,
                 connectWallet,
+                transactions,
                 currentAccount,
                 isLoading,
                 sendTransaction,
@@ -141,5 +158,5 @@ export const TransactionProvider = ({ children }) => {
         >
             {children}
         </TransactionContext.Provider>
-    )
-}
+    );
+};
