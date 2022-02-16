@@ -1,5 +1,8 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.0;
+
+import "hardhat/console.sol";
 
 contract Transactions {
     uint256 transactionCount;
@@ -28,7 +31,7 @@ contract Transactions {
         return transactions;
     }
 
-    function getTransactionsCount() public view returns (uint256) {
-        return transactionsCount;
+    function getTransactionCount() public view returns (uint256) {
+        return transactionCount;
     }
 }
